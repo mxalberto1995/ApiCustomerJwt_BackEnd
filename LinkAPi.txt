@@ -1,0 +1,9 @@
+localhost:44308/swagger/index.html
+
+adminuser
+admin
+
+{
+  "username": "adminuser",
+  "password": "admin"
+}
