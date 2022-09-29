@@ -35,7 +35,7 @@ namespace CustomerAPI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();            
+            services.AddControllers();
 
             services.AddDbContext<Learn_DBContext>(options => options.UseSqlServer(Configuration.GetConnectionString("constring")));
 
@@ -52,45 +52,71 @@ namespace CustomerAPI
             {
                 item.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 item.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                //Linea Agregada
+                item.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             }).AddJwtBearer(item =>
             {
 
-                item.RequireHttpsMetadata = false;
-                item.SaveToken = false;
+                item.RequireHttpsMetadata = true;
+                item.SaveToken = true;
                 item.TokenValidationParameters = new TokenValidationParameters()
                 {
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authkey)),
                     ValidateIssuer = false,
                     ValidateAudience = false,
-                    //ValidateLifetime = true,
-                    //ClockSkew=TimeSpan.Zero
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero
                 };
             });
+
+            //Inicio de Bloque para agregar Autenticación Bearer Visualmente en Swagger
 
             services.AddSwaggerGen(options =>
             {
                 options.SwaggerDoc("api", new OpenApiInfo()
                 {
-                    Description = "API Customers",
+                    Description = "Customer API with curd operations",
                     Title = "Customer",
                     Version = "1"
                 });
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme {
+                In = ParameterLocation.Header,
+                Description = "Por favor ingresa el Token",
+                Name = "Authorización",
+                Type = SecuritySchemeType.Http,
+                BearerFormat = "JWT",
+                Scheme = "bearer"
+                });
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement{
+                {
+                  new OpenApiSecurityScheme {
+                      Reference = new OpenApiReference {
+                       Type = ReferenceType.SecurityScheme,
+                       Id = "Bearer"
+                    }
+                 },
+                 new string[]{}
+
+                 }
+               
+
             });
+                //Fin de Bloque para agregar Autenticación Bearer Visualmente en Swagger
 
             services.AddCors(options =>
             {
                 options.AddPolicy("CorsPolicy",
                     builder => builder
-                    .WithOrigins("http://localhost:4200","http://localhost:82")
+                    .WithOrigins("http://localhost:4200", "http://localhost:82")
                     .AllowAnyMethod()
                     .AllowAnyHeader()
                     .AllowCredentials());
             });
 
 
+          });
         }
-
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
@@ -132,12 +158,12 @@ namespace CustomerAPI
                 });
             });
 
-            app.UseSwaggerUI(options => options.SwaggerEndpoint("api/swagger.json", "Customer"));            
+            app.UseSwaggerUI(options => options.SwaggerEndpoint("api/swagger.json", "Customer"));
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
             });
         }
-    }
+    }   
 }

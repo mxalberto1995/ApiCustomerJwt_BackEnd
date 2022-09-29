@@ -44,54 +44,91 @@ namespace CustomerAPI.Controllers
             return tokenResponse;
         }
 
+        //Codigo Implementado
+
+        //[Route("Authenticate")]
+        //[HttpPost]
+        //public IActionResult Authenticate([FromBody] usercred user)
+        //{
+        //    TokenResponse tokenResponse = new TokenResponse();
+        //    var _user = context.TblUser.FirstOrDefault(o => o.Userid == user.username && o.Password == user.password && o.IsActive==true);
+        //    if (_user == null)
+        //        return Unauthorized();
+
+        //    var tokenhandler = new JwtSecurityTokenHandler();
+        //    var tokenkey = Encoding.UTF8.GetBytes(setting.securitykey);
+        //    var claims = new ClaimsIdentity();
+        //    claims.AddClaim(new Claim(ClaimTypes.Name, _user.Userid));
+        //    claims.AddClaim(new Claim(ClaimTypes.Role, _user.Role));
+
+
+        //    var date = DateTime.UtcNow;
+        //    //var tokenDescriptor = new SecurityTokenDescriptor
+        //    //{
+        //    //    Subject = new ClaimsIdentity(
+        //    //        new Claim[]
+        //    //        {
+        //    //            new Claim(ClaimTypes.Name, _user.Userid),
+        //    //            new Claim(ClaimTypes.Role, _user.Role)
+
+        //    //        }
+        //    //    ),
+        //    //    Expires = DateTime.Now.AddMinutes(10),
+        //    //    NotBefore = date,
+        //    //    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(tokenkey), SecurityAlgorithms.HmacSha256Signature)
+        //    //};
+
+        //    var tokenDescriptor = new SecurityTokenDescriptor
+        //    {
+        //        Subject = claims,
+        //        Expires = DateTime.UtcNow.AddMinutes(5),
+        //        SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(tokenkey), SecurityAlgorithms.HmacSha256Signature)
+        //    };
+
+
+        //    var tokenHandler = new JwtSecurityTokenHandler();
+        //    var tokenConfig = tokenHandler.CreateToken(tokenDescriptor);
+        //    string tokencreado = tokenHandler.WriteToken(tokenConfig);
+
+
+        //    string finaltoken = tokenhandler.WriteToken(tokenConfig);
+
+        //    //Regresar simplemente el finaltoken
+
+        //    tokenResponse.JWTToken = finaltoken;
+        //    tokenResponse.RefreshToken = tokenGenerator.GenerateToken(user.username);
+
+        //    return Ok(tokenResponse);
+        //}
+
+        //Codigo Original 
         [Route("Authenticate")]
         [HttpPost]
         public IActionResult Authenticate([FromBody] usercred user)
         {
             TokenResponse tokenResponse = new TokenResponse();
-            var _user = context.TblUser.FirstOrDefault(o => o.Userid == user.username && o.Password == user.password && o.IsActive==true);
+            var _user = context.TblUser.FirstOrDefault(o => o.Userid == user.username && o.Password == user.password && o.IsActive == true);
             if (_user == null)
                 return Unauthorized();
 
             var tokenhandler = new JwtSecurityTokenHandler();
             var tokenkey = Encoding.UTF8.GetBytes(setting.securitykey);
-            var claims = new ClaimsIdentity();
-            claims.AddClaim(new Claim(ClaimTypes.Name, _user.Userid));
-            claims.AddClaim(new Claim(ClaimTypes.Role, _user.Role));
-
-
-            var date = DateTime.UtcNow;
-            //var tokenDescriptor = new SecurityTokenDescriptor
-            //{
-            //    Subject = new ClaimsIdentity(
-            //        new Claim[]
-            //        {
-            //            new Claim(ClaimTypes.Name, _user.Userid),
-            //            new Claim(ClaimTypes.Role, _user.Role)
-
-            //        }
-            //    ),
-            //    Expires = DateTime.Now.AddMinutes(10),
-            //    NotBefore = date,
-            //    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(tokenkey), SecurityAlgorithms.HmacSha256Signature)
-            //};
-
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = claims,
-                Expires = DateTime.UtcNow.AddMinutes(5),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(tokenkey), SecurityAlgorithms.HmacSha256Signature)
+                Subject = new ClaimsIdentity(
+                    new Claim[]
+                    {
+                        new Claim(ClaimTypes.Name, _user.Userid),
+                        new Claim(ClaimTypes.Role, _user.Role)
+
+                    }
+                ),
+                //Expires = DateTime.Now.AddMinutes(20),
+                Expires = DateTime.Now.AddHours(7),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(tokenkey), SecurityAlgorithms.HmacSha256)
             };
-
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var tokenConfig = tokenHandler.CreateToken(tokenDescriptor);
-            string tokencreado = tokenHandler.WriteToken(tokenConfig);
-
-
-            string finaltoken = tokenhandler.WriteToken(tokenConfig);
-
-            //Regresar simplemente el finaltoken
+            var token = tokenhandler.CreateToken(tokenDescriptor);
+            string finaltoken = tokenhandler.WriteToken(token);
 
             tokenResponse.JWTToken = finaltoken;
             tokenResponse.RefreshToken = tokenGenerator.GenerateToken(user.username);
